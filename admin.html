@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>N Legacy - Powerful Admin Panel</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Admin Verification (Pre-Login Screen) -->
+  <div id="loginGate" class="fixed inset-0 bg-slate-900 bg-opacity-75 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl mx-4 transform transition-all">
+      <div class="text-center mb-6">
+        <div class="inline-flex p-3 bg-indigo-100 rounded-full text-indigo-600 mb-3">
+          <i data-lucide="shield-check" class="w-8 h-8"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">Admin Control Access</h2>
+        <p class="text-slate-500 text-sm mt-1">Please enter credentials to unlock N Legacy admin features.</p>
+      </div>
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Phone Number</label>
+          <div class="relative">
+            <input type="text" id="adminPhone" placeholder="e.g. 01781099407" required
+              class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            <span class="absolute left-3.5 top-3 text-slate-400">
+              <i data-lucide="phone" class="w-4.5 h-4.5"></i>
+            </span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Password</label>
+          <div class="relative">
+            <input type="password" id="adminPassword" placeholder="••••••••" required
+              class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+            <span class="absolute left-3.5 top-3 text-slate-400">
+              <i data-lucide="lock" class="w-4.5 h-4.5"></i>
+            </span>
+          </div>
+        </div>
+        <div id="loginError" class="hidden text-rose-500 text-xs font-medium text-center">
+          Incorrect Credentials. Access Denied.
+        </div>
+        <button type="submit"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow-lg shadow-indigo-100">
+          Unlock Console
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Workspace Layout -->
+  <div id="adminWorkspace" class="hidden flex-1 flex flex-col md:flex-row">
+    
+    <!-- Left Sidebar -->
+    <aside class="w-full md:w-64 bg-slate-900 text-slate-200 flex flex-col border-r border-slate-800">
+      <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-black text-lg">
+            N
+          </div>
+          <div>
+            <h1 class="font-bold text-lg text-white leading-tight">N Legacy</h1>
+            <span class="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">Live Backend</span>
+          </div>
+        </div>
+        <button onclick="logoutAdmin()" class="text-slate-400 hover:text-white" title="Lock Console">
+          <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 p-4 space-y-1.5" id="sidebarMenu">
+        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="menu-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition text-indigo-400 bg-indigo-950/40">
+          <i data-lucide="layout-dashboard" class="w-4.5 h-4.5"></i>
+          <span>Overview</span>
+        </button>
+        <button onclick="switchTab('products')" id="btn-products" class="menu-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+          <i data-lucide="shopping-bag" class="w-4.5 h-4.5"></i>
+          <span>Products</span>
+        </button>
+        <button onclick="switchTab('orders')" id="btn-orders" class="menu-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <i data-lucide="package" class="w-4.5 h-4.5"></i>
+            <span>Orders</span>
+          </div>
+          <span id="orderBadge" class="bg-amber-500 text-slate-950 font-bold px-1.5 py-0.5 rounded text-[10px] hidden">0</span>
+        </button>
+        <button onclick="switchTab('chats')" id="btn-chats" class="menu-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white flex justify-between items-center">
+          <div class="flex items-center gap-3">
+            <i data-lucide="message-square-text" class="w-4.5 h-4.5"></i>
+            <span>Live Chats</span>
+          </div>
+          <span id="chatBadge" class="bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded text-[10px] hidden">0</span>
+        </button>
+        <button onclick="switchTab('coupons')" id="btn-coupons" class="menu-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+          <i data-lucide="ticket" class="w-4.5 h-4.5"></i>
+          <span>Coupons</span>
+        </button>
+        <button onclick="switchTab('sliders')" id="btn-sliders" class="menu-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+          <i data-lucide="sliders" class="w-4.5 h-4.5"></i>
+          <span>Slider Banners</span>
+        </button>
+        <button onclick="switchTab('users')" id="btn-users" class="menu-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:bg-slate-800 hover:text-white">
+          <i data-lucide="users" class="w-4.5 h-4.5"></i>
+          <span>Registered Users</span>
+        </button>
+      </nav>
+
+      <!-- Admin Profile info in sidebar footer -->
+      <div class="p-4 border-t border-slate-800 bg-slate-950/60 flex items-center gap-3">
+        <img id="adminProfileImg" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=100" class="w-10 h-10 rounded-full object-cover border-2 border-indigo-500">
+        <div class="overflow-hidden">
+          <h4 id="adminName" class="font-semibold text-sm text-white truncate">Emon</h4>
+          <span class="text-xs text-slate-400">Owner & Admin</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+
+      <!-- ================== SECTION: DASHBOARD OVERVIEW ================== -->
+      <section id="sec-dashboard" class="tab-section space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Dashboard Overview</h2>
+            <p class="text-slate-500 text-sm">Real-time statistics of N Legacy e-commerce database</p>
+          </div>
+          <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2 flex items-center gap-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-xs font-semibold text-indigo-950 uppercase tracking-wider">Sync Active</span>
+          </div>
+        </div>
+
+        <!-- Metric Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-semibold text-slate-400 uppercase">Total Revenue</span>
+              <h3 id="statRevenue" class="text-3xl font-black text-slate-900 mt-1">৳0</h3>
+            </div>
+            <div class="p-3 bg-indigo-50 rounded-xl text-indigo-600">
+              <i data-lucide="badge-dollar-sign" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-semibold text-slate-400 uppercase">Total Orders</span>
+              <h3 id="statOrders" class="text-3xl font-black text-slate-900 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-amber-50 rounded-xl text-amber-600">
+              <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-semibold text-slate-400 uppercase">Live Products</span>
+              <h3 id="statProducts" class="text-3xl font-black text-slate-900 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-sky-50 rounded-xl text-sky-600">
+              <i data-lucide="box" class="w-6 h-6"></i>
+            </div>
+          </div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <span class="text-xs font-semibold text-slate-400 uppercase">Customers</span>
+              <h3 id="statUsers" class="text-3xl font-black text-slate-900 mt-1">0</h3>
+            </div>
+            <div class="p-3 bg-rose-50 rounded-xl text-rose-600">
+              <i data-lucide="users-2" class="w-6 h-6"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Recent Orders Panel -->
+          <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 lg:col-span-2">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="font-bold text-slate-900">Recent Transactions</h4>
+              <button onclick="switchTab('orders')" class="text-indigo-600 hover:text-indigo-700 text-xs font-semibold">View All</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead>
+                  <tr class="text-slate-400 border-b border-slate-100 text-xs uppercase tracking-wider">
+                    <th class="pb-3 font-semibold">Order ID</th>
+                    <th class="pb-3 font-semibold">Customer</th>
+                    <th class="pb-3 font-semibold">Amount</th>
+                    <th class="pb-3 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="recentOrdersList" class="divide-y divide-slate-100 text-slate-700">
+                  <!-- JS populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Chat Quick Access -->
+          <div class="bg-white border border-slate-100 rounded-2xl shadow-sm p-6 flex flex-col h-full">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="font-bold text-slate-900">Conversations Waiting</h4>
+              <button onclick="switchTab('chats')" class="text-rose-600 hover:text-rose-700 text-xs font-semibold">View Chats</button>
+            </div>
+            <div id="dashboardChatsList" class="space-y-3 overflow-y-auto flex-1 custom-scrollbar max-h-64">
+              <!-- JS populated -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================== SECTION: PRODUCTS MANAGEMENT ================== -->
+      <section id="sec-products" class="tab-section hidden space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Products Catalog</h2>
+            <p class="text-slate-500 text-sm">Create, edit, and delete store inventory items</p>
+          </div>
+          <button onclick="openProductModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-2 shadow-lg shadow-indigo-100">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add New Product
+          </button>
+        </div>
+
+        <!-- Filter category bar -->
+        <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-wrap gap-2">
+          <button onclick="filterProducts('All')" class="prod-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700">All</button>
+          <button onclick="filterProducts('Organic')" class="prod-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50">Organic</button>
+          <button onclick="filterProducts('Oil & Ghee')" class="prod-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50">Oil & Ghee</button>
+          <button onclick="filterProducts('Honey')" class="prod-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50">Honey</button>
+          <button onclick="filterProducts('Dates')" class="prod-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50">Dates</button>
+          <button onclick="filterProducts('Spices')" class="prod-cat-btn px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50">Spices</button>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="productsGrid">
+          <!-- JS populated -->
+        </div>
+      </section>
+
+      <!-- ================== SECTION: ORDERS MANAGEMENT ================== -->
+      <section id="sec-orders" class="tab-section hidden space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Orders Desk</h2>
+          <p class="text-slate-500 text-sm">Control deliveries, update payment status, and track shipments</p>
+        </div>
+
+        <!-- Order tab filters -->
+        <div class="bg-white p-2 rounded-xl border border-slate-100 shadow-sm flex flex-wrap gap-1">
+          <button onclick="filterOrders('All')" class="order-status-btn px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700">All Orders</button>
+          <button onclick="filterOrders('Pending')" class="order-status-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50">Pending</button>
+          <button onclick="filterOrders('Processing')" class="order-status-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50">Processing</button>
+          <button onclick="filterOrders('Shipped')" class="order-status-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50">Shipped</button>
+          <button onclick="filterOrders('Delivered')" class="order-status-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-500 hover:bg-slate-50">Delivered</button>
+        </div>
+
+        <!-- Orders Table/Cards -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500 border-b border-slate-100 text-xs font-semibold uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4">Order ID</th>
+                  <th class="px-6 py-4">User Details</th>
+                  <th class="px-6 py-4">Items Summary</th>
+                  <th class="px-6 py-4">Final Bill</th>
+                  <th class="px-6 py-4">Status & Dispatch</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody" class="divide-y divide-slate-100 text-slate-700">
+                <!-- JS populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================== SECTION: MESSENGER CHATS ================== -->
+      <section id="sec-chats" class="tab-section hidden h-full flex flex-col space-y-4">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Live Messenger</h2>
+          <p class="text-slate-500 text-sm font-medium">Respond to real-time client questions instantly</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-150 shadow-sm flex-1 flex flex-col md:flex-row overflow-hidden min-h-[500px]">
+          
+          <!-- Chats list side panel -->
+          <div class="w-full md:w-80 border-r border-slate-150 flex flex-col bg-slate-50">
+            <div class="p-4 bg-white border-b border-slate-150">
+              <h3 class="font-bold text-slate-900">Inboxes</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-100" id="chatUsersList">
+              <!-- JS populated -->
+            </div>
+          </div>
+
+          <!-- Active Conversation screen -->
+          <div class="flex-1 flex flex-col bg-slate-50">
+            <div id="chatWindowHeader" class="bg-white p-4 border-b border-slate-150 flex items-center justify-between hidden">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm" id="activeChatAvatar">
+                  U
+                </div>
+                <div>
+                  <h4 class="font-bold text-slate-900" id="activeChatUserName">John Doe</h4>
+                  <p class="text-xs text-slate-400" id="activeChatUserPhone">017XXXXXXXX</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div id="chatMessagesStream" class="flex-1 p-6 overflow-y-auto space-y-4 custom-scrollbar flex flex-col bg-[radial-gradient(#f1f5f9_1px,transparent_1px)] [background-size:16px_16px]">
+              <div class="flex-1 flex flex-col items-center justify-center text-slate-400">
+                <i data-lucide="message-square" class="w-12 h-12 mb-2 text-indigo-300"></i>
+                <p class="text-sm">Select a contact to begin chat session</p>
+              </div>
+            </div>
+
+            <!-- Chat Input controls -->
+            <form id="chatInputForm" class="p-4 bg-white border-t border-slate-150 flex gap-3 hidden">
+              <input type="text" id="chatMsgInput" placeholder="Type your reply..." required
+                class="flex-1 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-xl px-4 py-2 text-sm bg-slate-50">
+              <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-5 py-2 text-sm font-semibold transition flex items-center gap-2">
+                Send <i data-lucide="send" class="w-4 h-4"></i>
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================== SECTION: COUPONS ================== -->
+      <section id="sec-coupons" class="tab-section hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Promo Coupons</h2>
+            <p class="text-slate-500 text-sm">Reward customers with flat discounts or free shipping vouchers</p>
+          </div>
+          <button onclick="openCouponModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i> New Coupon
+          </button>
+        </div>
+
+        <!-- Coupon Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="couponsGrid">
+          <!-- JS populated -->
+        </div>
+      </section>
+
+      <!-- ================== SECTION: SLIDER BANNERS ================== -->
+      <section id="sec-sliders" class="tab-section hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Hero Slider Carousels</h2>
+            <p class="text-slate-500 text-sm">Update home page promo slides dynamically</p>
+          </div>
+          <button onclick="openSliderModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition flex items-center gap-2">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add New Slide
+          </button>
+        </div>
+
+        <!-- Sliders Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="slidersGrid">
+          <!-- JS populated -->
+        </div>
+      </section>
+
+      <!-- ================== SECTION: USERS LIST ================== -->
+      <section id="sec-users" class="tab-section hidden space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Registered Users</h2>
+          <p class="text-slate-500 text-sm">Browse customer profiles and credentials securely</p>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="bg-slate-50 text-slate-500 border-b border-slate-100 text-xs font-semibold uppercase tracking-wider">
+                <tr>
+                  <th class="px-6 py-4">Avatar</th>
+                  <th class="px-6 py-4">Full Name</th>
+                  <th class="px-6 py-4">Phone Number</th>
+                  <th class="px-6 py-4">Email ID</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody" class="divide-y divide-slate-100 text-slate-700">
+                <!-- JS populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ================== MODAL: ADD/EDIT PRODUCT ================== -->
+  <div id="productModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 flex items-center justify-center hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 mx-4 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+        <h3 class="text-lg font-bold text-slate-900" id="productModalTitle">Add New Product</h3>
+        <button onclick="closeProductModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="productForm" class="space-y-4">
+        <input type="hidden" id="editProductId">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Product Title</label>
+          <input type="text" id="pName" required placeholder="e.g. Rice Flour (Chaler Gura) 2kg"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Category</label>
+            <select id="pCategory" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+              <option value="Organic">Organic</option>
+              <option value="Oil & Ghee">Oil & Ghee</option>
+              <option value="Honey">Honey</option>
+              <option value="Dates">Dates</option>
+              <option value="Spices">Spices</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Shop/Supplier Name</label>
+            <input type="text" id="pShop" required placeholder="RK Store"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Price (৳)</label>
+            <input type="number" id="pPrice" required placeholder="200"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Original Price (৳)</label>
+            <input type="number" id="pOriginalPrice" placeholder="230"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Discount (%)</label>
+            <input type="number" id="pDiscount" placeholder="13"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Image URL</label>
+          <input type="text" id="pImage" required placeholder="https://unsplash.com/..."
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Stock Units</label>
+            <input type="number" id="pStock" required placeholder="50"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Product Rating</label>
+            <input type="number" step="0.1" id="pRating" placeholder="4.5"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Product Description</label>
+          <textarea id="pDescription" rows="3" placeholder="Explain details, quality metrics etc..."
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm transition">
+          Save Product
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================== MODAL: ADD/EDIT COUPON ================== -->
+  <div id="couponModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 flex items-center justify-center hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 mx-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h3 class="text-lg font-bold text-slate-900" id="couponModalTitle">New Promo Coupon</h3>
+        <button onclick="closeCouponModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="couponForm" class="space-y-4">
+        <input type="hidden" id="editCouponIsEdit" value="false">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Coupon Code</label>
+          <input type="text" id="cCode" required placeholder="e.g. FLATS500"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 uppercase text-slate-900 bg-white">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Discount (৳)</label>
+            <input type="number" id="cDiscount" required placeholder="500"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Minimum Order Bill (৳)</label>
+            <input type="number" id="cMinAmount" required placeholder="2000"
+              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Type</label>
+          <select id="cType" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+            <option value="flat">Flat Discount</option>
+            <option value="free_shipping">Free Shipping</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Short Description</label>
+          <input type="text" id="cDescription" required placeholder="৳500 flat discount on orders over ৳2000"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm transition">
+          Save Coupon Code
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================== MODAL: ADD/EDIT SLIDER BANNER ================== -->
+  <div id="sliderModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 z-40 flex items-center justify-center hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 mx-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h3 class="text-lg font-bold text-slate-900" id="sliderModalTitle">New Slider Banner</h3>
+        <button onclick="closeSliderModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="sliderForm" class="space-y-4">
+        <input type="hidden" id="editSliderId">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Banner Title</label>
+          <input type="text" id="sTitle" required placeholder="50% Discount on Organic Items"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Subtitle</label>
+          <input type="text" id="sSubtitle" required placeholder="Fresh groceries direct to your home safely"
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Image URL</label>
+          <input type="text" id="sImage" required placeholder="https://unsplash.com/..."
+            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 bg-white">
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-sm transition">
+          Save Banner Slide
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ================== ADMIN SCRIPTS ================== -->
+  <script>
+    let products = [];
+    let orders = [];
+    let coupons = [];
+    let sliders = [];
+    let users = [];
+    let chats = {};
+
+    let activeChatPhone = null;
+    let selectedCategoryFilter = "All";
+    let selectedOrderStatusFilter = "All";
+
+    // 1. Lock/Unlock logic on page load
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      const isAdminUnlocked = localStorage.getItem("adminUnlocked") === "true";
+      if (isAdminUnlocked) {
+        unlockWorkspace();
+      }
+
+      // Login handler
+      document.getElementById("loginForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const ph = document.getElementById("adminPhone").value.trim();
+        const pw = document.getElementById("adminPassword").value.trim();
+
+        // Exact match as requested
+        if (ph === "01781099407" && pw === "Emon@36231") {
+          localStorage.setItem("adminUnlocked", "true");
+          localStorage.setItem("adminPhone", ph);
+          unlockWorkspace();
+        } else {
+          const errEl = document.getElementById("loginError");
+          errEl.classList.remove("hidden");
+          setTimeout(() => errEl.classList.add("hidden"), 3000);
+        }
+      });
+
+      // Poll data every 3 seconds to keep it dynamic and fresh!
+      setInterval(() => {
+        if (localStorage.getItem("adminUnlocked") === "true") {
+          fetchData(true);
+        }
+      }, 3000);
+    });
+
+    function unlockWorkspace() {
+      document.getElementById("loginGate").classList.add("hidden");
+      document.getElementById("adminWorkspace").classList.remove("hidden");
+      fetchData();
+    }
+
+    function logoutAdmin() {
+      localStorage.removeItem("adminUnlocked");
+      localStorage.removeItem("adminPhone");
+      location.reload();
+    }
+
+    // 2. Tab Navigation
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-section").forEach(s => s.classList.add("hidden"));
+      document.getElementById("sec-" + tabId).classList.remove("hidden");
+
+      // Update button styling
+      document.querySelectorAll(".menu-btn").forEach(btn => {
+        btn.classList.remove("text-indigo-400", "bg-indigo-950/40");
+        btn.classList.add("text-slate-400");
+      });
+      document.getElementById("btn-" + tabId).classList.add("text-indigo-400", "bg-indigo-950/40");
+      document.getElementById("btn-" + tabId).classList.remove("text-slate-400");
+
+      if (tabId === 'chats' && activeChatPhone) {
+        markChatAsRead(activeChatPhone);
+      }
+    }
+
+    // 3. API Fetch & Populate
+    async function fetchData(silent = false) {
+      try {
+        const res = await fetch("/api/db");
+        if (!res.ok) return;
+        const data = await res.json();
+
+        products = data.products || [];
+        orders = data.orders || [];
+        coupons = data.coupons || [];
+        sliders = data.sliders || [];
+        users = data.users || [];
+        chats = data.chats || {};
+
+        if (!silent) {
+          // Initialize active user info
+          const adminUser = users.find(u => u.phone === "01781099407");
+          if (adminUser) {
+            document.getElementById("adminName").innerText = adminUser.name;
+            document.getElementById("adminProfileImg").src = adminUser.profileImage;
+          }
+        }
+
+        renderDashboard();
+        renderProducts();
+        renderOrders();
+        renderChats();
+        renderCoupons();
+        renderSliders();
+        renderUsers();
+      } catch (err) {
+        console.error("Failed to sync database", err);
+      }
+    }
+
+    // 4. Renderers
+    function renderDashboard() {
+      // Stats calculating
+      const totalRev = orders
+        .filter(o => o.status === "Delivered")
+        .reduce((sum, o) => sum + parseFloat(o.total), 0);
+      
+      document.getElementById("statRevenue").innerText = "৳" + totalRev.toLocaleString();
+      document.getElementById("statOrders").innerText = orders.length;
+      document.getElementById("statProducts").innerText = products.length;
+      document.getElementById("statUsers").innerText = users.length;
+
+      // Pending orders badge
+      const pendingCount = orders.filter(o => o.status === "Pending").length;
+      const orderBadge = document.getElementById("orderBadge");
+      if (pendingCount > 0) {
+        orderBadge.innerText = pendingCount;
+        orderBadge.classList.remove("hidden");
+      } else {
+        orderBadge.classList.add("hidden");
+      }
+
+      // Unread chats badge
+      const unreadChatsCount = Object.values(chats).filter(c => c.unread).length;
+      const chatBadge = document.getElementById("chatBadge");
+      if (unreadChatsCount > 0) {
+        chatBadge.innerText = unreadChatsCount;
+        chatBadge.classList.remove("hidden");
+      } else {
+        chatBadge.classList.add("hidden");
+      }
+
+      // Dashboard recent orders
+      const recentOrdersList = document.getElementById("recentOrdersList");
+      recentOrdersList.innerHTML = "";
+      orders.slice().reverse().slice(0, 5).forEach(o => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition";
+        tr.innerHTML = `
+          <td class="py-3 font-semibold text-slate-900">${o.id}</td>
+          <td class="py-3">
+            <div class="text-xs font-medium text-slate-800">${o.userName}</div>
+            <div class="text-[10px] text-slate-400">${o.phone}</div>
+          </td>
+          <td class="py-3 font-bold text-slate-900">৳${o.total}</td>
+          <td class="py-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getStatusStyle(o.status)}">
+              ${o.status}
+            </span>
+          </td>
+        `;
+        recentOrdersList.appendChild(tr);
+      });
+
+      // Dashboard Chats Quick Access
+      const dashChats = document.getElementById("dashboardChatsList");
+      dashChats.innerHTML = "";
+      const activeInboxes = Object.entries(chats).filter(([ph, c]) => c.messages.length > 0);
+      if (activeInboxes.length === 0) {
+        dashChats.innerHTML = `<div class="text-center text-xs text-slate-400 py-4">No conversations yet</div>`;
+      } else {
+        activeInboxes.forEach(([ph, chat]) => {
+          const lastMsg = chat.messages[chat.messages.length - 1];
+          const div = document.createElement("div");
+          div.className = "flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:border-indigo-100 transition cursor-pointer bg-slate-50";
+          div.onclick = () => {
+            activeChatPhone = ph;
+            switchTab("chats");
+            selectChat(ph);
+          };
+          div.innerHTML = `
+            <div class="flex items-center gap-2.5 overflow-hidden">
+              <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shrink-0">
+                ${chat.userName[0]}
+              </div>
+              <div class="overflow-hidden">
+                <h5 class="font-bold text-xs text-slate-800 leading-tight">${chat.userName}</h5>
+                <p class="text-[10px] text-slate-400 truncate mt-0.5">${lastMsg ? lastMsg.text : "No messages"}</p>
+              </div>
+            </div>
+            ${chat.unread ? '<span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>' : ''}
+          `;
+          dashChats.appendChild(div);
+        });
+      }
+    }
+
+    function getStatusStyle(status) {
+      switch (status) {
+        case "Pending": return "bg-amber-100 text-amber-800";
+        case "Processing": return "bg-sky-100 text-sky-800";
+        case "Shipped": return "bg-indigo-100 text-indigo-800";
+        case "Delivered": return "bg-emerald-100 text-emerald-800";
+        default: return "bg-slate-100 text-slate-800";
+      }
+    }
+
+    // Products Management
+    function renderProducts() {
+      const grid = document.getElementById("productsGrid");
+      grid.innerHTML = "";
+      
+      const filtered = selectedCategoryFilter === "All" 
+        ? products 
+        : products.filter(p => p.category === selectedCategoryFilter);
+
+      filtered.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "bg-white rounded-2xl border border-slate-150 p-4 shadow-sm flex flex-col justify-between hover:shadow-md transition relative";
+        card.innerHTML = `
+          ${p.discount ? `<span class="absolute top-3 left-3 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">-${p.discount}%</span>` : ''}
+          <div>
+            <img src="${p.image}" class="w-full h-32 object-cover rounded-xl mb-3">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${p.category} • ${p.shop}</span>
+            <h4 class="font-bold text-slate-800 text-sm mt-0.5 line-clamp-1">${p.name}</h4>
+            <div class="flex items-baseline gap-2 mt-1">
+              <span class="font-extrabold text-base text-indigo-600">৳${p.price}</span>
+              ${p.originalPrice ? `<span class="text-xs text-slate-400 line-through">৳${p.originalPrice}</span>` : ''}
+            </div>
+            <p class="text-[11px] text-slate-500 line-clamp-2 mt-1.5">${p.description || "No description available."}</p>
+          </div>
+          <div class="flex gap-2 border-t border-slate-50 pt-3 mt-3">
+            <button onclick="editProduct('${p.id}')" class="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold py-1.5 rounded-lg transition flex items-center justify-center gap-1">
+              <i data-lucide="edit" class="w-3.5 h-3.5"></i> Edit
+            </button>
+            <button onclick="deleteProduct('${p.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold p-1.5 rounded-lg transition" title="Delete product">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    function filterProducts(cat) {
+      selectedCategoryFilter = cat;
+      document.querySelectorAll(".prod-cat-btn").forEach(btn => {
+        if (btn.innerText === cat) {
+          btn.classList.add("bg-indigo-50", "text-indigo-700");
+          btn.classList.remove("text-slate-500", "hover:bg-slate-50");
+        } else {
+          btn.classList.remove("bg-indigo-50", "text-indigo-700");
+          btn.classList.add("text-slate-500", "hover:bg-slate-50");
+        }
+      });
+      renderProducts();
+    }
+
+    // Add/Edit Product Modal triggers
+    function openProductModal() {
+      document.getElementById("productModalTitle").innerText = "Add New Product";
+      document.getElementById("editProductId").value = "";
+      document.getElementById("productForm").reset();
+      document.getElementById("productModal").classList.remove("hidden");
+    }
+
+    function closeProductModal() {
+      document.getElementById("productModal").classList.add("hidden");
+    }
+
+    async function editProduct(id) {
+      const p = products.find(prod => prod.id === id);
+      if (!p) return;
+
+      document.getElementById("productModalTitle").innerText = "Edit Product Details";
+      document.getElementById("editProductId").value = p.id;
+      document.getElementById("pName").value = p.name || '';
+      document.getElementById("pCategory").value = p.category || 'Organic';
+      document.getElementById("pShop").value = p.shop || 'RK Store';
+      document.getElementById("pPrice").value = p.price || '';
+      document.getElementById("pOriginalPrice").value = p.originalPrice || '';
+      document.getElementById("pDiscount").value = p.discount || '';
+      document.getElementById("pImage").value = p.image || '';
+      document.getElementById("pStock").value = p.stock || 50;
+      document.getElementById("pRating").value = p.rating || 4.5;
+      document.getElementById("pDescription").value = p.description || '';
+
+      document.getElementById("productModal").classList.remove("hidden");
+    }
+
+    document.getElementById("productForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("editProductId").value;
+      const productData = {
+        name: document.getElementById("pName").value,
+        category: document.getElementById("pCategory").value,
+        shop: document.getElementById("pShop").value,
+        price: parseFloat(document.getElementById("pPrice").value),
+        originalPrice: parseFloat(document.getElementById("pOriginalPrice").value) || null,
+        discount: parseFloat(document.getElementById("pDiscount").value) || 0,
+        image: document.getElementById("pImage").value,
+        stock: parseInt(document.getElementById("pStock").value),
+        rating: parseFloat(document.getElementById("pRating").value) || 4.5,
+        description: document.getElementById("pDescription").value,
+        reviewsCount: 50
+      };
+
+      const url = id ? `/api/products/${id}` : "/api/products";
+      const method = id ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(productData)
+      });
+
+      if (res.ok) {
+        closeProductModal();
+        fetchData();
+      }
+    });
+
+    async function deleteProduct(id) {
+      if (!confirm("Are you sure you want to delete this product?")) return;
+      const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchData();
+      }
+    }
+
+    // Orders Desk management
+    function renderOrders() {
+      const tbody = document.getElementById("ordersTableBody");
+      tbody.innerHTML = "";
+
+      const filtered = selectedOrderStatusFilter === "All" 
+        ? orders 
+        : orders.filter(o => o.status === selectedOrderStatusFilter);
+
+      filtered.slice().reverse().forEach(o => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition text-xs sm:text-sm";
+        
+        // items lists
+        const itemsList = o.items.map(item => `
+          <div class="flex items-center gap-2 mb-1 border-b border-slate-50 pb-1">
+            <img src="${item.image}" class="w-6 h-6 object-cover rounded">
+            <span class="font-medium text-slate-800">${item.name} <span class="text-indigo-600 font-bold">x${item.quantity}</span></span>
+          </div>
+        `).join("");
+
+        tr.innerHTML = `
+          <td class="px-6 py-4 align-top">
+            <span class="font-extrabold text-slate-900 block">${o.id}</span>
+            <span class="text-[10px] text-slate-400 block mt-1">${new Date(o.createdAt).toLocaleString()}</span>
+          </td>
+          <td class="px-6 py-4 align-top">
+            <div class="font-bold text-slate-800">${o.userName}</div>
+            <div class="text-xs text-slate-500 mt-0.5 font-medium"><i data-lucide="phone" class="w-3 h-3 inline-block mr-1"></i>${o.phone}</div>
+            ${o.email ? `<div class="text-xs text-slate-400"><i data-lucide="mail" class="w-3 h-3 inline-block mr-1"></i>${o.email}</div>` : ''}
+            <div class="text-[11px] text-slate-500 mt-1.5 bg-slate-50 p-2 rounded border border-slate-100 max-w-xs">
+              <strong>Address:</strong> ${o.address}, ${o.city} (${o.zipCode})
+              ${o.orderNotes ? `<br><strong>Notes:</strong> <span class="text-indigo-600">${o.orderNotes}</span>` : ''}
+            </div>
+          </td>
+          <td class="px-6 py-4 align-top">
+            <div class="max-h-24 overflow-y-auto custom-scrollbar pr-2">
+              ${itemsList}
+            </div>
+          </td>
+          <td class="px-6 py-4 align-top">
+            <div class="space-y-1">
+              <div class="flex justify-between text-slate-500 text-[11px]">Subtotal: <span>৳${o.subtotal}</span></div>
+              <div class="flex justify-between text-slate-500 text-[11px]">Delivery: <span>৳${o.deliveryFee}</span></div>
+              ${o.discount ? `<div class="flex justify-between text-rose-500 text-[11px]">Discount: <span>-৳${o.discount}</span></div>` : ''}
+              <div class="flex justify-between font-black text-slate-900 border-t border-slate-100 pt-1">Total: <span>৳${o.total}</span></div>
+              <div class="flex flex-col gap-1.5 mt-1.5">
+                <div>
+                  <span class="text-[10px] font-extrabold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                    ${o.paymentMethod}
+                  </span>
+                </div>
+                ${o.onlinePaymentMethod ? `
+                  <div>
+                    <span class="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                      Channel: ${o.onlinePaymentMethod}
+                    </span>
+                  </div>
+                ` : ''}
+                ${o.transactionId ? `
+                  <div class="text-[10px] font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded border border-slate-200 font-mono mt-0.5">
+                    <strong>Trx ID:</strong> <span class="text-indigo-600 font-bold block select-all">${o.transactionId}</span>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4 align-top">
+            <div class="space-y-2">
+              <div>
+                <span class="px-2.5 py-1 rounded text-[10px] font-extrabold tracking-wider uppercase ${getStatusStyle(o.status)}">
+                  ${o.status}
+                </span>
+              </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Dispatch State</label>
+                <select onchange="updateOrderStatus('${o.id}', this.value)" class="border border-slate-200 text-xs rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                  <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                  <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                  <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                </select>
+              </div>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    function filterOrders(status) {
+      selectedOrderStatusFilter = status;
+      document.querySelectorAll(".order-status-btn").forEach(btn => {
+        if (btn.innerText.includes(status)) {
+          btn.classList.add("bg-indigo-50", "text-indigo-700");
+          btn.classList.remove("text-slate-500", "hover:bg-slate-50");
+        } else {
+          btn.classList.remove("bg-indigo-50", "text-indigo-700");
+          btn.classList.add("text-slate-500", "hover:bg-slate-50");
+        }
+      });
+      renderOrders();
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        fetchData(true);
+      }
+    }
+
+    // Live Messenger chats rendering
+    function renderChats() {
+      const listContainer = document.getElementById("chatUsersList");
+      listContainer.innerHTML = "";
+
+      const activeInboxes = Object.entries(chats);
+      if (activeInboxes.length === 0) {
+        listContainer.innerHTML = `<div class="text-center text-xs text-slate-400 p-4">No incoming customer messages</div>`;
+        return;
+      }
+
+      activeInboxes.sort((a, b) => {
+        const aMsgs = a[1].messages;
+        const bMsgs = b[1].messages;
+        if (aMsgs.length === 0) return 1;
+        if (bMsgs.length === 0) return -1;
+        return new Date(bMsgs[bMsgs.length - 1].timestamp) - new Date(aMsgs[aMsgs.length - 1].timestamp);
+      });
+
+      activeInboxes.forEach(([phone, session]) => {
+        const lastMsg = session.messages[session.messages.length - 1];
+        const item = document.createElement("div");
+        const isActive = activeChatPhone === phone;
+        item.className = `p-4 cursor-pointer hover:bg-slate-100 transition flex items-center justify-between border-b border-slate-100 ${isActive ? 'bg-indigo-50/70 border-l-4 border-indigo-600' : ''}`;
+        item.onclick = () => selectChat(phone);
+
+        item.innerHTML = `
+          <div class="flex items-center gap-3 overflow-hidden">
+            <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">
+              ${session.userName ? session.userName[0].toUpperCase() : 'G'}
+            </div>
+            <div class="overflow-hidden">
+              <h4 class="font-bold text-sm text-slate-800 leading-tight">${session.userName || "Guest User"}</h4>
+              <p class="text-xs text-slate-400 leading-tight mt-0.5 truncate">${phone}</p>
+              <p class="text-xs text-slate-500 font-medium truncate mt-1">${lastMsg ? lastMsg.text : 'No messages'}</p>
+            </div>
+          </div>
+          <div class="flex flex-col items-end shrink-0 gap-1.5">
+            <span class="text-[10px] text-slate-400">${lastMsg ? new Date(lastMsg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</span>
+            ${session.unread ? '<span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>' : ''}
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
+
+      if (activeChatPhone) {
+        renderActiveChatMessages();
+      }
+    }
+
+    async function selectChat(phone) {
+      activeChatPhone = phone;
+      document.getElementById("chatWindowHeader").classList.remove("hidden");
+      document.getElementById("chatInputForm").classList.remove("hidden");
+      
+      const session = chats[phone];
+      if (session) {
+        document.getElementById("activeChatUserName").innerText = session.userName;
+        document.getElementById("activeChatUserPhone").innerText = phone;
+        document.getElementById("activeChatAvatar").innerText = session.userName[0].toUpperCase();
+      }
+
+      renderActiveChatMessages();
+
+      // Send read event to server
+      await fetch(`/api/chats/${phone}/read`, { method: "POST" });
+      chats[phone].unread = false;
+      
+      // Re-trigger chats list render
+      renderChats();
+    }
+
+    function renderActiveChatMessages() {
+      const stream = document.getElementById("chatMessagesStream");
+      stream.innerHTML = "";
+
+      const session = chats[activeChatPhone];
+      if (!session || session.messages.length === 0) {
+        stream.innerHTML = `<div class="text-center text-slate-400 text-xs my-auto">Start typing below to send a message</div>`;
+        return;
+      }
+
+      session.messages.forEach(msg => {
+        const wrap = document.createElement("div");
+        const isAdmin = msg.sender === "admin";
+        wrap.className = `flex ${isAdmin ? 'justify-end' : 'justify-start'}`;
+
+        const isToday = new Date(msg.timestamp).toDateString() === new Date().toDateString();
+        const timeFormatted = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+        wrap.innerHTML = `
+          <div class="max-w-[70%] space-y-1">
+            <div class="px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isAdmin ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-white border border-slate-150 text-slate-800 rounded-bl-none'} shadow-sm">
+              ${msg.text}
+            </div>
+            <div class="text-[9px] text-slate-400 ${isAdmin ? 'text-right' : 'text-left'}">${isToday ? 'Today' : ''} ${timeFormatted}</div>
+          </div>
+        `;
+        stream.appendChild(wrap);
+      });
+
+      // Auto scroll to bottom
+      setTimeout(() => stream.scrollTop = stream.scrollHeight, 50);
+    }
+
+    document.getElementById("chatInputForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = document.getElementById("chatMsgInput");
+      const text = input.value.trim();
+      if (!text || !activeChatPhone) return;
+
+      const res = await fetch(`/api/chats/${activeChatPhone}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: "admin",
+          text,
+          userName: "Admin Console"
+        })
+      });
+
+      if (res.ok) {
+        input.value = "";
+        const updatedChat = await res.json();
+        chats[activeChatPhone] = updatedChat;
+        renderActiveChatMessages();
+        renderChats();
+      }
+    });
+
+    // Coupons section
+    function renderCoupons() {
+      const grid = document.getElementById("couponsGrid");
+      grid.innerHTML = "";
+
+      coupons.forEach(c => {
+        const card = document.createElement("div");
+        card.className = "bg-white border border-slate-150 rounded-2xl p-5 shadow-sm flex flex-col justify-between relative overflow-hidden";
+        card.innerHTML = `
+          <div class="absolute -right-4 -top-4 w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold">
+            %
+          </div>
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded inline-block mb-2">
+              ${c.type === 'free_shipping' ? 'Free Delivery' : 'Discount'}
+            </span>
+            <h3 class="text-xl font-black text-slate-900 tracking-tight">${c.code}</h3>
+            <p class="text-xs text-slate-500 font-medium mt-1">${c.description}</p>
+            <div class="space-y-1 mt-4 text-xs font-semibold text-slate-600">
+              <div class="flex justify-between border-b border-slate-50 pb-1"><span>Discount Amount:</span> <span class="text-slate-900">৳${c.discount}</span></div>
+              <div class="flex justify-between"><span>Minimum Bill limit:</span> <span class="text-slate-900">৳${c.minAmount}</span></div>
+            </div>
+          </div>
+          <div class="flex gap-2 border-t border-slate-50 pt-4 mt-4">
+            <button onclick="editCoupon('${c.code}')" class="flex-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold py-1.5 rounded-lg transition">Edit</button>
+            <button onclick="deleteCoupon('${c.code}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-lg transition">Delete</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function openCouponModal() {
+      document.getElementById("couponModalTitle").innerText = "New Promo Coupon";
+      document.getElementById("editCouponIsEdit").value = "false";
+      document.getElementById("couponForm").reset();
+      document.getElementById("cCode").readOnly = false;
+      document.getElementById("couponModal").classList.remove("hidden");
+    }
+
+    function closeCouponModal() {
+      document.getElementById("couponModal").classList.add("hidden");
+    }
+
+    function editCoupon(code) {
+      const c = coupons.find(coupon => coupon.code.toUpperCase() === code.toUpperCase());
+      if (!c) return;
+
+      document.getElementById("couponModalTitle").innerText = "Edit Coupon details";
+      document.getElementById("editCouponIsEdit").value = "true";
+      document.getElementById("cCode").value = c.code;
+      document.getElementById("cCode").readOnly = true;
+      document.getElementById("cDiscount").value = c.discount;
+      document.getElementById("cMinAmount").value = c.minAmount;
+      document.getElementById("cType").value = c.type;
+      document.getElementById("cDescription").value = c.description;
+
+      document.getElementById("couponModal").classList.remove("hidden");
+    }
+
+    document.getElementById("couponForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const isEdit = document.getElementById("editCouponIsEdit").value === "true";
+      const code = document.getElementById("cCode").value.toUpperCase();
+      const couponData = {
+        code,
+        discount: parseFloat(document.getElementById("cDiscount").value),
+        minAmount: parseFloat(document.getElementById("cMinAmount").value),
+        type: document.getElementById("cType").value,
+        description: document.getElementById("cDescription").value
+      };
+
+      const url = isEdit ? `/api/coupons/${code}` : "/api/coupons";
+      const method = isEdit ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(couponData)
+      });
+
+      if (res.ok) {
+        closeCouponModal();
+        fetchData();
+      } else {
+        const error = await res.json();
+        alert(error.error || "An error occurred");
+      }
+    });
+
+    async function deleteCoupon(code) {
+      if (!confirm(`Delete coupon [${code}]?`)) return;
+      const res = await fetch(`/api/coupons/${code}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchData();
+      }
+    }
+
+    // Hero Sliders Banners
+    function renderSliders() {
+      const grid = document.getElementById("slidersGrid");
+      grid.innerHTML = "";
+
+      sliders.forEach(s => {
+        const card = document.createElement("div");
+        card.className = "bg-white border border-slate-150 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between";
+        card.innerHTML = `
+          <div>
+            <img src="${s.image}" class="w-full h-36 object-cover bg-slate-50">
+            <div class="p-4">
+              <h4 class="font-extrabold text-slate-900 text-sm leading-tight">${s.title}</h4>
+              <p class="text-xs text-slate-500 mt-0.5">${s.subtitle}</p>
+            </div>
+          </div>
+          <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-2">
+            <button onclick="editSlider('${s.id}')" class="flex-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold py-1.5 rounded-lg transition">Edit Slide</button>
+            <button onclick="deleteSlider('${s.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold px-3 py-1.5 rounded-lg transition">Delete</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function openSliderModal() {
+      document.getElementById("sliderModalTitle").innerText = "Add New Slide";
+      document.getElementById("editSliderId").value = "";
+      document.getElementById("sliderForm").reset();
+      document.getElementById("sliderModal").classList.remove("hidden");
+    }
+
+    function closeSliderModal() {
+      document.getElementById("sliderModal").classList.add("hidden");
+    }
+
+    function editSlider(id) {
+      const s = sliders.find(slide => slide.id === id);
+      if (!s) return;
+
+      document.getElementById("sliderModalTitle").innerText = "Edit Banner Slide";
+      document.getElementById("editSliderId").value = s.id;
+      document.getElementById("sTitle").value = s.title;
+      document.getElementById("sSubtitle").value = s.subtitle;
+      document.getElementById("sImage").value = s.image;
+
+      document.getElementById("sliderModal").classList.remove("hidden");
+    }
+
+    document.getElementById("sliderForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("editSliderId").value;
+      const sliderData = {
+        title: document.getElementById("sTitle").value,
+        subtitle: document.getElementById("sSubtitle").value,
+        image: document.getElementById("sImage").value
+      };
+
+      const url = id ? `/api/sliders/${id}` : "/api/sliders";
+      const method = id ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sliderData)
+      });
+
+      if (res.ok) {
+        closeSliderModal();
+        fetchData();
+      }
+    });
+
+    async function deleteSlider(id) {
+      if (!confirm("Are you sure you want to delete this slide?")) return;
+      const res = await fetch(`/api/sliders/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        fetchData();
+      }
+    }
+
+    // Registered users list rendering
+    function renderUsers() {
+      const tbody = document.getElementById("usersTableBody");
+      tbody.innerHTML = "";
+
+      users.forEach(u => {
+        const tr = document.createElement("tr");
+        tr.className = "hover:bg-slate-50 transition text-xs sm:text-sm";
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <img src="${u.profileImage || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200'}" 
+                 class="w-8 h-8 rounded-full object-cover border border-slate-200">
+          </td>
+          <td class="px-6 py-4 font-bold text-slate-900">${u.name}</td>
+          <td class="px-6 py-4 font-semibold text-indigo-600">${u.phone}</td>
+          <td class="px-6 py-4 text-slate-500">${u.email || '<span class="text-slate-300">Not provided</span>'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+  </script>
+</body>
+</html>

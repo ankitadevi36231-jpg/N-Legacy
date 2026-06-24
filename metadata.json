@@ -1,0 +1,6 @@
+{
+  "name": "N Legacy",
+  "description": "An elegant organic grocery e-commerce app with dynamic bottom-navigation, order tracking, coupons, and real-time live chat with an integrated admin panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
