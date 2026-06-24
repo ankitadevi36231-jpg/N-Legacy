@@ -688,8 +688,12 @@ app.get("/admin", (req, res) => {
 
 // Vite & Static file configurations
 async function startServer() {
-  // Sync database from Supabase cloud on start
-  await syncFromSupabase();
+  // Sync database from Supabase cloud on start (non-blocking)
+  syncFromSupabase().then(() => {
+    console.log("Initial Supabase cloud sync done.");
+  }).catch((err) => {
+    console.error("Initial Supabase cloud sync failed:", err);
+  });
 
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
